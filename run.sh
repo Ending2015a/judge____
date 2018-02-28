@@ -3,4 +3,4 @@ start=`date +%s.%N`
 srun -p batch $*
 end=`date +%s.%N`
 TIME=`echo "$end - $start" | bc | awk -F"." '{print $1"."substr($2,1,6)}'`
-echo "TIME:$TIME"
+echo "TIME:{$TIME}"

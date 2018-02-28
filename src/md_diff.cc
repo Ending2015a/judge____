@@ -246,8 +246,9 @@ int main(int argc, char **argv){
         print_fc_font("slant");
         printf("\n");
     }
-
     */
 
-    return grade;
+    printf("PERFECT:{%d}, GOOD:{%d}, MISS:{%d}, GRADE:{%d}\n", perfect, good, miss, grade);
+
+    return 0;
 }
