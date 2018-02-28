@@ -1,9 +1,8 @@
 CC = mpicc
 CXX = mpicxx
 LDFLAGS = -lm -fopenmp -llodepng
-CFLAGS = -O3 -std=gnu99 -I/home/ipc/ta/lib/lodepng -L/home/ipc/ta/lib/lodepng
-CXXFLAGS = -O3 -std=c++11 -I/home/ipc/ta/lib/glm -I/home/ipc/ta/lib/lodepng -L/home/ipc/ta/lib/lodepng
-TARGETS = md_diff
+CXXFLAGS = -O3 -std=c++11 -I/home/ipc/ta/lib/glm -I/home/ipc/ta/lib/lodepng -L/home/ipc/ta/lib/lodepng -I/home/ipc/zexlus1126/hw2_judge/src/json/include
+TARGETS = md_diff summary
 
 .PHONY: all
 all: $(TARGETS)

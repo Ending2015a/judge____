@@ -115,15 +115,21 @@ int main(int argc, char **argv){
     
     Image A, B;
 
-    if(!(A.load(argv[1]) && B.load(argv[2]))){
-        return 0;
+    if(!A.load(argv[1])){
+        fprintf(stderr, "[ERROR] Image [%s] load error\n", argv[1]);
+        exit(255);
+    }
+
+    if(!B.load(argv[2])){
+        fprintf(stderr, "[ERROR] Image [%s] load error\n", argv[2]);
+        exit(254);
     }
 
     if(A.width != B.width || A.height != B.height){
-        printf("[ERROR] Two images have differet sizes:\n");
-        printf("        Image A: (%u, %u)\n", A.width, A.height);
-        printf("        Image B: (%u, %u)\n", B.width, B.height);
-        return 0;
+        fprintf(stderr, "[ERROR] Two images have differet sizes:\n");
+        fprintf(stderr, "        Image A: (%u, %u)\n", A.width, A.height);
+        fprintf(stderr, "        Image B: (%u, %u)\n", B.width, B.height);
+        exit(253);
     }
 
     //////check
@@ -198,7 +204,7 @@ int main(int argc, char **argv){
     double miss_rate = (double)miss / (double)total_pixel * 100.0;
     double accuracy = ((double)perfect + 0.5 * (double)good)/(double)total_pixel * 100.0 - 0.005;
 
-    int grade = 0;
+    int grade = 5;
     bool fullcombo = false;
 
     
@@ -218,6 +224,7 @@ int main(int argc, char **argv){
         grade = 5;
     }
 
+    /*
     std::string *font = get_font("ansi_shadow", grade);
 
     printf("\n");
@@ -240,6 +247,7 @@ int main(int argc, char **argv){
         printf("\n");
     }
 
+    */
 
-    return 0;
+    return grade;
 }
