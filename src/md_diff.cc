@@ -204,24 +204,24 @@ int main(int argc, char **argv){
     double miss_rate = (double)miss / (double)total_pixel * 100.0;
     double accuracy = ((double)perfect + 0.5 * (double)good)/(double)total_pixel * 100.0 - 0.005;
 
-    int grade = 5;
     bool fullcombo = false;
 
+    std::string grade_str = "X";
     
     if(perfect == total_pixel){  //SS
-        grade = 0;
         fullcombo = true;
-    }else if(miss == 0 && accuracy > 98.){  //S
-        grade = 1;
+        grade_str = "SS";
+    }else if(miss == 0 && accuracy > 99.6){  //S
         fullcombo = true;
-    }else if(accuracy > 98.){  //A
-        grade = 2;
-    }else if(accuracy > 95.){  //B
-        grade = 3;
-    }else if(accuracy > 90.){  //C
-        grade = 4;
+        grade_str = "S";
+    }else if(accuracy > 99.6){  //A
+        grade_str = "A";
+    }else if(accuracy > 99.){  //B
+        grade_str = "B";
+    }else if(accuracy > 95.){  //C
+        grade_str = "C";
     }else{                     //F
-        grade = 5;
+        grade_str = "F";
     }
 
     /*
@@ -248,7 +248,7 @@ int main(int argc, char **argv){
     }
     */
 
-    printf("PERFECT:{%d}, GOOD:{%d}, MISS:{%d}, GRADE:{%d}\n", perfect, good, miss, grade);
+    printf("PERFECT:{%d}, GOOD:{%d}, MISS:{%d}, GRADE:{%s}\n", perfect, good, miss, grade_str.c_str());
 
     return 0;
 }

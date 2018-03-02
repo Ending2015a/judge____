@@ -7,50 +7,45 @@ PARAMS=("-N 4 -n 4 -c 12 TARGET 12 1.835201 0.561417 -0.521397 0 0 0 1280 720 OU
 ROOT_FOLDER="./list"
 TARGET_EXE="md_pal"
 FOLDER_PREFIX="hw2"
-TEST_TIMES=1
+TEST_TIMES=3
 
 LOG_FOLDER="./log"
 LOG_FILE="$LOG_FOLDER/judge_USER.log"
 RESULT_FOLDER="./result"
-RESULT_FILE="$RESULT_FOLDER/result_USER.json"
+RESULT_FILE="$RESULT_FOLDER/result_USER"
+
+# you can choose use which format
+OUTPUT_AS_JSON_FORMAT=1
+#OUTPUT_AS_CSV_FORMAT=1
+
+# debug
+OUTPUT_APPEND_RESULT_LOG=1
+
+# define color
+ERROR_COLOR="\033[91m"
+LOG_COLOR="\033[32m"
+USER_COLOR="\033[33m"
+ERRCODE_COLOR="\033[96m"
+ERRMSG_COLOR="\033[37m"
+PATH_COLOR="\033[95m"
+HIGHLIGHT_COLOR="\033[93m"
+TIME_COLOR="\033[95m"
+NM="\033[0m"
 
 # log log [-e] $msg
 function log
 {
-    flag="LOG"
+    flag="[${LOG_COLOR}LOG${NM}]"
     if [ "$1" = "-e" ]; then
-        flag="ERROR"
+        flag="[${ERROR_COLOR}ERROR${NM}]"
         shift
     fi
 
-    echo -e $1
-    msg=$(echo -e $1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g")
+    echo -e "$flag $1"
     DATE=`date '+%Y-%m-%d %H:%M:%S'`
-    echo "[$flag] / $DATE / $msg" >> $USER_LOG_FILE
+    msg=$(echo -e "$flag / $DATE / $1" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g")
+    echo "$msg" >> $USER_LOG_FILE
 }
-
-
-# check root folder existance
-if [ ! -d "$ROOT_FOLDER" ]; then
-    echo "Cannot find root: $ROOT_FOLDER"
-    exit 1
-fi
-
-# check log folder
-if [ ! -d "$LOG_FOLDER" ]; then
-    echo "Create log folder: $LOG_FOLDER"
-    mkdir $LOG_FOLDER
-fi
-
-# check result folder
-if [ ! -d "$RESULT_FOLDER" ]; then
-    echo "Create result folder: $RESULT_FOLDER"
-    mkdir $RESULT_FOLDER
-fi
-
-# get user folder list
-FOLDER_LIST=`ls -d -- ${ROOT_FOLDER}/${FOLDER_PREFIX}_*/`
-
 
 # text replacement function
 # replace $A to $B
@@ -60,38 +55,61 @@ function replace
     echo "${1/$2/$3}"
 }
 
-# $case $round $perfect $good $miss $grade $time $error $err_message
-function append_json
-{
-    # append json object
-
-    USER_RESULT="$USER_RESULT    {"
-    USER_RESULT="$USER_RESULT        \"case\": $1,"         # unsigned int field
-    USER_RESULT="$USER_RESULT        \"round\": $2,"        # unsigned int field
-    USER_RESULT="$USER_RESULT        \"perfect\": $3,"      # unsigned int field
-    USER_RESULT="$USER_RESULT        \"good\": $4,"         # unsigned int field
-    USER_RESULT="$USER_RESULT        \"miss\": $5,"         # unsigned int field
-    USER_RESULT="$USER_RESULT        \"grade\": \"$6\","    # string field
-    USER_RESULT="$USER_RESULT        \"time\": \"$7\","     # string field
-    USER_RESULT="$USER_RESULT        \"error\": $8,"        # unsigned int field
-    USER_RESULT="$USER_RESULT        \"error_msg\": \"$9\"" # string field
-    USER_RESULT="$USER_RESULT    },"
-}
-
 # $user
-function begin_json
+function begin_result
 {
-    user=$1
-
-    echo "{ \"user\": \"$user\", \"data\": ["
+    if [ $OUTPUT_AS_JSON_FORMAT -eq 1 ]; then
+        echo "{ \"user\": \"$1\", \"data\": ["
+    elif [ $OUTPUT_AS_CSV_FORMAT -eq 1 ]; then
+        echo "$1"
+    else
+        echo -e "[${ERROR_COLOR}ERROR${NM}] Please select one output format!!"
+        exit 1
+    fi
 }
 
-# $json
-function end_json
+# $case $round $perfect $good $miss $grade $time $error $err_message
+function append_result
 {
-    j=$1
-    echo "$j" | sed -e "s/\,$//g"
-    echo "]}"
+
+    if [ $OUTPUT_APPEND_RESULT_LOG -eq 1 ]; then
+        log "append_result: $*"
+    fi
+
+    if [ $OUTPUT_AS_JSON_FORMAT -eq 1 ]; then
+        # append json object
+        USER_RESULT="$USER_RESULT    {"
+        USER_RESULT="$USER_RESULT        \"case\": $1,"         # unsigned int field
+        USER_RESULT="$USER_RESULT        \"round\": $2,"        # unsigned int field
+        USER_RESULT="$USER_RESULT        \"perfect\": \"$3\","  # string field
+        USER_RESULT="$USER_RESULT        \"good\": \"$4\","     # string field
+        USER_RESULT="$USER_RESULT        \"miss\": \"$5\","     # string field
+        USER_RESULT="$USER_RESULT        \"grade\": \"$6\","    # string field
+        USER_RESULT="$USER_RESULT        \"time\": \"$7\","     # string field
+        USER_RESULT="$USER_RESULT        \"error\": $8,"        # unsigned int field
+        USER_RESULT="$USER_RESULT        \"error_msg\": \"$9\"" # string field
+        USER_RESULT="$USER_RESULT    },"
+    elif [ $OUTPUT_AS_CSV_FORMAT -eq 1 ]; then
+        USER_RESULT="$USER_RESULT, $3, $4, $5, $6, $7, $8, $9"
+    else
+        echo -e "[${ERROR_COLOR}ERROR${NM}] Please select one output format!!"
+        exit 1
+    fi
+
+}
+
+# $result $remark
+function end_result
+{
+    if [ $OUTPUT_AS_JSON_FORMAT -eq 1 ]; then
+        echo "$1" | sed -e "s/\,$//g"
+        echo "], \"remark\": \"$2\" }"
+    elif [ $OUTPUT_AS_CSV_FORMAT -eq 1 ]; then
+        echo "$1, $2"
+    else
+        echo -e "[${ERROR_COLOR}ERROR${NM}] Please select one output format!!"
+        exit 1
+    fi
 }
 
 # $template $fieldname
@@ -127,15 +145,15 @@ function judge_case
 
     # check if output_path already existed -> delete
     if [ -e $output_path ]; then
-        log "output path exist, removing: $output_path"
+        log "output path exist, removing: ${PATH_COLOR}$output_path${NM}"
         rm $output_path
     fi
 
     # check if executable target existed
     if [ ! -e $target_path ]; then
-        log -e "target path not exist: $target_path"
-        append_json $user $testcase $round 252 0 "target not found"
-        return -1
+        log -e "target path not exist: ${PATH_COLOR}$target_path${NM}"
+        append_result $testcase $round "inf" "inf" "inf" "X" "inf" 252 "target not found"
+        return 1
     fi
 
     # get slrum system config (-N -n -c ~~)
@@ -151,21 +169,26 @@ function judge_case
     res=$?
     # get execution time
     exe_time=$(get_field "$out" "TIME")
-    #exe_time=$(echo "$out" | grep -Po "(?<=TIME:{)[0-9]*\.?[0-9]*()")
 
-    log "complete in ${exe_time} sec"
+    log "complete in ${TIME_COLOR}${exe_time}${NM} sec"
 
     # check if exit code = 0, else ERROR
     if [ $res -ne 0 ]; then
-        log -e "got exit code $res when execute user's program, Case $testcase, Round: $round"
-        log -e "   error: $out"
-        append_json $testcase $round 0 0 0 "X" $exe_time $res "program error"
-        return -1
+        log -e "got exit code ${ERRCODE_COLOR}$res${NM} when execute user's program"
+        log -e "   error message: ${ERRMSG_COLOR}$out${NM}"
+        append_result $testcase $round "inf" "inf" "inf" "X" "inf" "$res" "user program error"
+        return 1
     fi
     
+    # check if user's output image exist
+    if [ ! -e "$output_path" ]; then
+        log -e "cannot find output path: ${PATH_COLOR}$output_path${NM}"
+        append_result $testcase $round "inf" "inf" "inf" "X" "inf" "255" "image cannot find"
+        return 1
+    fi
+
     log "execute: md_diff $output_path $answer_path $comp_path"
     out=$(./md_diff $output_path $answer_path $comp_path 2>&1)
-    log "md_diff: $out"
     res=$?
 
     # get grade
@@ -176,8 +199,8 @@ function judge_case
 
     error_msg=""
     if [ $res -ne 0 ]; then
-        log -e "got exit code $res when execute md_diff, Case: $i, Round: $4"
-        log -e "  error msg: $out"
+        log -e "got exit code ${ERRCODE_COLOR}$res${NM} when execute md_diff"
+        log -e "  error message: ${ERRMSG_COLOR}$out${NM}"
         grade="X"
         case $res in
             255)
@@ -195,16 +218,19 @@ function judge_case
         esac
     fi
 
-    log "append_json: $testcase $round $perfect $good $miss $grade $exe_time $res $error_msg"
-    append_json $testcase $round $perfect $good $miss $grade $exe_time $res $error_msg
+    if [ $grade = "X" ] || [ $grade = "F" ] || [ $grade = "C" ]; then
+        exe_time="inf"
+    fi
+
+    append_result $testcase $round $perfect $good $miss "$grade" "$exe_time" "$res" "$error_msg"
 
 }
 
-
-# start from here
-for DIR in $FOLDER_LIST ; do
+# judge one user $user_directory
+function judge_user
+{
     # get user working directory
-    USER_FOLDER=${DIR%/}
+    USER_FOLDER=${1%/}
     # get user name
     USER=$(echo $USER_FOLDER| awk -F"_" '{print $2}')
 
@@ -213,33 +239,140 @@ for DIR in $FOLDER_LIST ; do
     # get user result file path
     USER_RESULT_FILE=$(replace $RESULT_FILE "USER" "$USER")
 
-    # print log
-    log "Judging user: $USER"
-    # make file
-    make --no-print-directory -C $DIR
+    USER_REMARK=""
 
-    # json array begin
-    USER_RESULT=$(begin_json $USER)
+    # print log
+    log "Judging user: ${USER_COLOR}$USER${NM}"
+
+    # check for makefile existance
+    if [ ! -e "$USER_FOLDER/Makefile" ]; then
+        log -e "No makefile found"
+        USER_REMARK="No makefile found"
+    fi
+
+    # make file
+    make --no-print-directory -C $USER_FOLDER
+
+    # json begin
+    USER_RESULT=$(begin_result $USER)
 
     # testing (for each round)
     for ((r=0;r<$TEST_TIMES;++r)); do
-        # print log
-        log "Judging user: $USER, round $r"
         # (for each case)
         for ((c=0;c<${#PARAMS[@]};++c)); do
+            # print log
+            log "Judging user: ${USER_COLOR}$USER${NM}, ${HIGHLIGHT_COLOR}round $r, case $c${NM}"
             # judge
             judge_case $USER $USER_FOLDER $c $r
         done
     done
 
     # cat multiple lines to single line
-    USER_RESULT=$(echo "${USER_RESULT[*]}")
+    USER_RESULT=$(end_result "${USER_RESULT[*]}" "${USER_REMARK}")
 
-    # json array end (redirect to user's result file)
-    echo "$(end_json $USER_RESULT)" | python -m json.tool > $USER_RESULT_FILE
-    
-    #echo "$USER_RESULT" | sed -e "s/\,$/\]/g" | python -m json.tool > $USER_RESULT_FILE
+    # json end (redirect to user's result file)
+    if [ $OUTPUT_AS_JSON_FORMAT -eq 1 ]; then
+        echo "${USER_RESULT[*]}" | python -m json.tool > ${USER_RESULT_FILE}.json
+    elif [ $OUTPUT_AS_CSV_FORMAT -eq 1 ]; then
+        echo "${USER_RESULT[*]}" > ${USER_RESULT_FILE}.csv
+    else
+         echo -e "[${ERROR_COLOR}ERROR${NM}] Please select one output format!!"
+        exit 1
+    fi
     
     # make clean
-    make --no-print-directory -C $DIR clean
+    make --no-print-directory -C $USER_FOLDER clean
+}
+
+# judge all user
+function judge_all
+{
+    # get user folder list
+    FOLDER_LIST=`ls -d -- ${ROOT_FOLDER}/${FOLDER_PREFIX}_*/`
+    
+    for DIR in $FOLDER_LIST ; do
+        judge_user $DIR
+        echo ""
+    done       
+}
+
+function usage
+{
+    echo "usage: [-c] [-a root] [-u user_directory]"
+    echo "  -a        judge all user under specified root directory"
+    echo "  -u        judge one user under specified directory"
+    echo "  -c        clear logs, results"
+}
+
+
+JUDGE_ALL=1
+
+
+
+while getopts "ca:u:" OPTION; do
+    case $OPTION in
+        a)  # judge all (default)
+            JUDGE_ALL=1
+            directory=$OPTARG
+            if [ "$directory" = "" ]; then
+                echo -e "Invalid root folder: ${PATH_COLOR}$directory${NM}"
+                exit 1
+            fi
+            ROOT_FOLDER=$directory
+            ;;
+        u)  # judge user (folder path)
+            JUDGE_ALL=0
+            directory=$OPTARG
+            if [ "$directory" = "" ]; then
+                echo -e "Invalid user folder: ${PATH_COLOR}$directory${NM}"
+            fi
+            USER_FOLDER=$directory
+            ;;
+        c)  # clear
+            set -x
+            rm -rf $LOG_FOLDER
+            rm -rf $RESULT_FOLDER
+            set +x
+            exit
+            ;;
+        *)  # print usage
+            usage
+            exit
+            ;;
+    esac
 done
+
+# check root folder existance
+if [ ! -d "$ROOT_FOLDER" ]; then
+    echo -e "Cannot find root: ${PATH_COLOR}$ROOT_FOLDER${NM}"
+    exit 1
+fi
+
+# check log folder
+if [ ! -d "$LOG_FOLDER" ]; then
+    echo -e "Create log folder: ${PATH_COLOR}$LOG_FOLDER${NM}"
+    mkdir $LOG_FOLDER
+fi
+
+# check result folder
+if [ ! -d "$RESULT_FOLDER" ]; then
+    echo -e "Create result folder: ${PATH_COLOR}$RESULT_FOLDER${NM}"
+    mkdir $RESULT_FOLDER
+fi
+
+# judge
+if [ $JUDGE_ALL -eq 1 ]; then
+    if [ ! -d "$ROOT_FOLDER" ]; then
+        echo -e "Root folder ${PATH_COLOR}\"$ROOT_FOLDER\"${NM} not exist"
+        exit 1
+    fi
+
+    judge_all
+else
+    if [ ! -d "$USER_FOLDER" ]; then
+        echo -e "User folder ${PATH_COLOR}\"$USER_FOLDER\"${NM} not exist"
+        exit 1
+    fi
+    judge_user $USER_FOLDER
+fi
+
