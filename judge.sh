@@ -145,13 +145,13 @@ function judge_case
 
     # check if output_path already existed -> delete
     if [ -e $output_path ]; then
-        log "output path exist, removing: ${PATH_COLOR}$output_path${NM}"
+        log "output path exists, removing: ${PATH_COLOR}$output_path${NM}"
         rm $output_path
     fi
 
     # check if executable target existed
     if [ ! -e $target_path ]; then
-        log -e "target path not exist: ${PATH_COLOR}$target_path${NM}"
+        log -e "target path not exists: ${PATH_COLOR}$target_path${NM}"
         append_result $testcase $round "inf" "inf" "inf" "X" "inf" 252 "target not found"
         return 1
     fi
@@ -174,7 +174,7 @@ function judge_case
 
     # check if exit code = 0, else ERROR
     if [ $res -ne 0 ]; then
-        log -e "got exit code ${ERRCODE_COLOR}$res${NM} when execute user's program"
+        log -e "get exit code ${ERRCODE_COLOR}$res${NM} when execute user's program"
         log -e "   error message: ${ERRMSG_COLOR}$out${NM}"
         append_result $testcase $round "inf" "inf" "inf" "X" "inf" "$res" "user program error"
         return 1
@@ -182,8 +182,8 @@ function judge_case
     
     # check if user's output image exist
     if [ ! -e "$output_path" ]; then
-        log -e "cannot find output path: ${PATH_COLOR}$output_path${NM}"
-        append_result $testcase $round "inf" "inf" "inf" "X" "inf" "255" "image cannot find"
+        log -e "cannot find output file: ${PATH_COLOR}$output_path${NM}"
+        append_result $testcase $round "inf" "inf" "inf" "X" "inf" "255" "output not found"
         return 1
     fi
 
